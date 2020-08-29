@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Teste de Câmeras</title>
+  <style>
+
+
+ 
+  </style>
+</head>
+<body>
+
+
+
+<center>
+        <video id="camera-visitante" width="300" height="400" preload autoplay loop muted></video>
+        <Br>
+        <video id="camera-documento" width="300" height="400" preload autoplay loop muted></video> 
+
+
+</center>
+
+  <script>
+
+  function round(value, decimals) {
+    return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+  }
+
+  const cameraVisitante = document.querySelector('#camera-visitante')
+
+  const cameraDocumento = document.querySelector('#camera-documento')
+
+  const startVideo = () => {
+    navigator.mediaDevices.enumerateDevices()
+    .then(devices => {
+        if (Array.isArray(devices)) {
+            devices.forEach(device => {
+                
+                if (device.kind === 'videoinput') {
+                    console.log(device)
+                    if (device.label.includes('LG Webcam (04f2:b149)')) {
+                        navigator.getUserMedia(
+                            { video: {
+                                deviceId: device.deviceId
+                            }},
+                            stream => cameraVisitante.srcObject = stream,
+                            error => console.error(error)
+                        )
+                    }
+
+                    if (device.label.includes('C920')) {
+                        navigator.getUserMedia(
+                            { video: {
+                                deviceId: device.deviceId
+                            }},
+                            stream => cameraDocumento.srcObject = stream,
+                            error => console.error(error)
+                        )
+                    }
+
+
+
+                }
+            })
+        }
+    })
+}
+startVideo();
+  </script>
+
+</body>
+</html>
