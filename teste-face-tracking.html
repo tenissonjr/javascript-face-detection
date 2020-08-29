@@ -3,57 +3,125 @@
 <head>
   <meta charset="utf-8">
   <title>tracking.js - face with camera</title>
-  
+
 
   <script src="lib/tracking.js-master/build/tracking-min.js"></script>
   <script src="lib/tracking.js-master/build/data/face.js"></script>
 
+  <link rel="stylesheet"
+	href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+	integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk"
+	crossorigin="anonymous">
+
+
   <style>
-
-
   video, canvas {
+    margin-left: 100px;
+    margin-top: 140px;
+    
     position: absolute;
   }
   </style>
 </head>
 <body>
 
-<center>
-  <div class="demo-frame">
-    <div class="demo-container">
-      <video id="video" width="450" height="600" preload autoplay loop muted></video>
-      <canvas id="canvas" width="450" height="600"></canvas>
-    </div>
-    Percentual Face/Imagem : <b><labe id="facePercentual"></labe>  </b>
 
-  </div>
-</center>
+
+
+    <h2 class="display-10">Teste de Câmera:</h2>
+    <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+            <div class="demo-frame">
+              <div class="demo-container">
+                <video id="video"   width="640" height="480" preload autoplay loop muted></video>
+                <canvas id="canvas" width="640" height="480"></canvas>
+                <canvas id="foto"   width="640" height="480" style="visibility: hidden"></canvas>
+              </div>
+            </div>
+            </div>
+          <div class="col-md-6"></div>
+        </div>
+        
+
+        
+
+        <div class="row">
+          <div class="col-md-8">
+            Percentual mínimo Face/Imagem  : <b><span id="corte">20</span></b> %
+            <input id="percentualMinimo" type="range" min="1" max="100" value="20"> 
+            <br>
+            Percentual Face/Imagem : <b><labe id="facePercentual"></labe>  </b>
+            <br>
+            <meter   id="meter"
+                    min="0"       
+                    max="100"
+          
+                    low="20"       
+                    optimum="50"       
+                    high="80"
+              
+                   value="0"       
+              ></meter>
+          </div>
+          <div class="col-md-6"></div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-8 text-center">
+            <button id="btnFotografarFace" type="button" class="btn btn-primary button-margin-top" >
+              <span  class="fas fa-camera">Fotografar</span></button>
+            <button id="btnReiniciarFotografarFace" type="button" class="btn btn-secondary button-margin-top button-margin-left" >
+              <span  class="fas fa-redo">Reiniciar</span></button>
+          </div>
+          <div class="col-md-4"></div>
+        </div>
+  
+      </div>
+  </body>
+  
 
   <script>
 
-  function round(value, decimals) {
-    return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+var percentualMinimo = document.getElementById("percentualMinimo");
+var corte = document.getElementById("corte");
+corte.innerHTML = percentualMinimo.value; // Display the default slider value
+
+// Update the current slider value (each time you drag the slider handle)
+percentualMinimo.oninput = function() {
+  corte.innerHTML = this.value;
+}
+
+function round(value, decimals) {
+    return  Number(Math.round(value+'e'+decimals)+'e-'+decimals);
   }
 
 
     window.onload = function() {
-      const video = document.querySelector('#video');
-      const canvas = document.querySelector('#canvas');
-      const facePercentual = document.querySelector('#facePercentual');
-      const context = canvas.getContext('2d');
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
+      
+      
+      var context = canvas.getContext('2d');
 
-      const tracker = new tracking.ObjectTracker('face');
+      const facePercentual = document.querySelector('#facePercentual');
+      const meter = document.querySelector('#meter');
+
+      const btnFotografar = document.querySelector('#btnFotografarFace')	
+
+      var tracker = new tracking.ObjectTracker('face');
       tracker.setInitialScale(4);
       tracker.setStepSize(2);
       tracker.setEdgesDensity(0.1);
 
       tracking.track('#video', tracker, { camera: true });
 
-      tracker.on('track', event => {
+      tracker.on('track', function(event) {
         context.clearRect(0, 0, canvas.width, canvas.height);
-        facePercentual.innerHTML= ''
 
-        event.data.forEach(rect => {
+    
+
+        event.data.forEach(function(rect) {
           context.strokeStyle = '#a64ceb';
           context.strokeRect(rect.x, rect.y, rect.width, rect.height);
           context.font = '11px Helvetica';
@@ -61,11 +129,97 @@
           context.fillText('x: ' + rect.x + 'px', rect.x + rect.width + 5, rect.y + 11);
           context.fillText('y: ' + rect.y + 'px', rect.x + rect.width + 5, rect.y + 22);
 
-          facePercentual.innerHTML= round( (rect.width * rect.height) / (canvas.width*canvas.height) *100 ,2) +  ' %'
+  
+
+
+        const percentualFace =  round( (rect.width * rect.height) / (canvas.width*canvas.height) ,2)  *100 ;
+
+        let valPercentualMinimo  = percentualMinimo.value
+
+          console.log("percentualFace",percentualFace);
+          /*
+         if (percentualFace>= valPercentualMinimo) {
+            meter.value = 100 ;
+         }else{
+          meter.value = 40 ;
+         }
+*/
+        
+
+        facePercentual.innerHTML=  percentualFace.toLocaleString("pt-BR", { maximumFractionDigits: 2, minimumFractionDigits: 2 })  +  ' %'
+
+
+
+
 
         });
       });
+
+      
+
+
     };
+
+
+  document.querySelector('#btnFotografarFace')	
+		.addEventListener('click',()=>takepicture());
+
+	document.querySelector('#btnReiniciarFotografarFace')	
+	.addEventListener('click',()=>resetpicture());
+
+  function takepicture(){
+
+      let video = document.querySelector('#video');
+      let canvas = document.querySelector('#canvas');
+      let foto = document.querySelector('#foto');      
+
+      video.style.visibility="hidden";
+
+      var context = foto.getContext('2d');
+    
+      if (canvas.width && canvas.height) {
+        foto.width = canvas.width;
+        foto.height = canvas.height;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        //this.data = this.canvas.toDataURL("image/jpg");
+        //this.photo.setAttribute("src", this.data);
+
+        foto.style.visibility="";
+      }
+
+
+
+
+  }
+
+  function resetpicture(){
+    let video = document.querySelector('#video');
+      let canvas = document.querySelector('#canvas');
+      let foto = document.querySelector('#foto');      
+
+      foto.style.visibility="hidden";
+      video.style.visibility="";
+
+
+
+}
+
+/*
+    takepicture() {
+      this.isFoto = true;
+      this.isVideo = false;
+      var context = this.canvas.getContext("2d");
+      if (this.width && this.height) {
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+        context.drawImage(this.video, 0, 0, this.width, this.height);
+
+        this.data = this.canvas.toDataURL("image/jpg");
+        this.photo.setAttribute("src", this.data);
+      }
+    },    
+    */
   </script>
 
 </body>
