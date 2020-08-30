@@ -13,23 +13,24 @@
 	integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk"
 	crossorigin="anonymous">
 
+  <link rel="stylesheet" href="assets/meter.css">
 
-  <style>
-  video, canvas {
-    margin-left: 100px;
-    margin-top: 140px;
-    
-    position: absolute;
-  }
-  </style>
+  
 </head>
 <body>
 
 
 
 
-    <h2 class="display-10">Teste de Câmera:</h2>
+    
     <div class="container">
+
+      <div class="row">
+        <div class="col-md-12">
+          <h2 class="display-10">Teste de fotografia de rosto:</h2>
+        </div>
+      </div>    
+
         <div class="row">
           <div class="col-md-8">
             <div class="demo-frame">
@@ -44,27 +45,37 @@
         </div>
         
 
-        
+        <div class="row">
+          <div class="col-md-4">
+            Percentual Face/Imagem Identificado: 
+          </div>  
+          <div class="col-md-2">
+            <b><labe id="percentualFace"></labe>  </b>
+          </div>  
+        </div>  
 
         <div class="row">
+            <div class="col-md-4"> 
+              Percentual mínimo para captura de foto  : 
+            </div>  
+          <div class="col-md-4">
+            <b><span id="corte">0</span></b> %
+            <input id="percentualMinimo" type="range" min="0" max="100" value="0"> 
+          </div> 
+        </div>  
+
+        <div class="row">
+          <div class="col-md-4"> 
+            Percentual relação ao mínimo obrigatório : 
+          </div>  
           <div class="col-md-8">
-            Percentual mínimo Face/Imagem  : <b><span id="corte">20</span></b> %
-            <input id="percentualMinimo" type="range" min="1" max="100" value="20"> 
-            <br>
-            Percentual Face/Imagem : <b><labe id="facePercentual"></labe>  </b>
-            <br>
-            <meter   id="meter"
-                    min="0"       
-                    max="100"
-          
-                    low="20"       
-                    optimum="50"       
-                    high="80"
-              
-                   value="0"       
-              ></meter>
+            <b><labe id="percentualMeter"></labe>  </b>
+          </div>  
+        </div>  
+        <div class="row">
+          <div class="col-md-12"></div>
+            <meter id="meter" min="0" max="100" low="25" high="75" optimum="100" value="10"></meter>
           </div>
-          <div class="col-md-6"></div>
         </div>
 
         <div class="row">
@@ -76,38 +87,51 @@
           </div>
           <div class="col-md-4"></div>
         </div>
-  
+
+        <div class="row">
+          <div class="col-md-4">&nbsp; </div>            
+          <div class="col-md-8">&nbsp;<b><label id="mensagemCapturaFoto"></label></b></div>  
+        </div>  
+        
+
       </div>
   </body>
   
 
   <script>
 
-var percentualMinimo = document.getElementById("percentualMinimo");
-var corte = document.getElementById("corte");
-corte.innerHTML = percentualMinimo.value; // Display the default slider value
 
-// Update the current slider value (each time you drag the slider handle)
-percentualMinimo.oninput = function() {
-  corte.innerHTML = this.value;
-}
+      const video         = document.getElementById('video');
+      const canvas        = document.getElementById('canvas');
+      var context         = canvas.getContext('2d');
 
-function round(value, decimals) {
-    return  Number(Math.round(value+'e'+decimals)+'e-'+decimals);
-  }
+      const percentualFace  = document.querySelector('#percentualFace');
+      const percentualMeter = document.querySelector('#percentualMeter');
 
-
-    window.onload = function() {
-      const video = document.getElementById('video');
-      const canvas = document.getElementById('canvas');
-      
-      
-      var context = canvas.getContext('2d');
-
-      const facePercentual = document.querySelector('#facePercentual');
       const meter = document.querySelector('#meter');
+      const btnFotografar       = document.querySelector('#btnFotografarFace')	
+      const mensagemCapturaFoto = document.querySelector('#mensagemCapturaFoto')	
 
-      const btnFotografar = document.querySelector('#btnFotografarFace')	
+
+      const percentualMinimo = document.getElementById("percentualMinimo");
+      const  corte = document.getElementById("corte");
+
+      corte.innerHTML = percentualMinimo.value; // Display the default slider value
+      // Update the current slider value (each time you drag the slider handle)
+      percentualMinimo.oninput = function() {
+        corte.innerHTML = this.value;
+      }
+
+    function round(value, decimals) {
+      return  Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+    }
+
+
+    window.onload =  IdentificarRosto ;
+    
+    
+    
+    function IdentificarRosto() {
 
       var tracker = new tracking.ObjectTracker('face');
       tracker.setInitialScale(4);
@@ -117,48 +141,67 @@ function round(value, decimals) {
       tracking.track('#video', tracker, { camera: true });
 
       tracker.on('track', function(event) {
-        context.clearRect(0, 0, canvas.width, canvas.height);
+      context.clearRect(0, 0, canvas.width, canvas.height);
 
-    
 
-        event.data.forEach(function(rect) {
-          context.strokeStyle = '#a64ceb';
+      if (parseFloat( percentualMinimo.value )==0){
+        return ;
+      }
+
+      event.data.forEach( rect => destacarRostoIdentificado(rect));      
+
+        if (event.data.length == 0){        
+          mensagemCapturaFoto.innerHTML='Falha de captura. Nenhum rosto identificado.'
+          btnFotografar.disabled = true;
+        } else if (event.data.length > 1){
+          mensagemCapturaFoto.innerHTML='Falha de captura. Mais de um rosto identificado.'
+          btnFotografar.disabled = true;
+        }
+      });
+
+
+    }
+
+   function destacarRostoIdentificado(rect) {
+
+        let  percentualFaceIdentificado =  round( (rect.width * rect.height) / (canvas.width*canvas.height) ,2)  *100 ;
+        percentualFace.innerHTML=  percentualFaceIdentificado.toLocaleString("pt-BR", { maximumFractionDigits: 2, minimumFractionDigits: 2 })  +  ' %'
+
+        let valPercentualMinimo  =   parseFloat( percentualMinimo.value );
+
+          console.log("*percentualMinimo",valPercentualMinimo)
+          console.log("percentualFaceIdentificado",percentualFaceIdentificado)
+
+        let percentualMeterCalculado = Math.min(100.00 ,  percentualFaceIdentificado / valPercentualMinimo*100 );  
+
+        
+        console.log("percentualMeterCalculado",percentualMeterCalculado)
+
+        percentualMeter.innerHTML=  percentualMeterCalculado.toLocaleString("pt-BR", { maximumFractionDigits: 2, minimumFractionDigits: 2 })  +  ' %'
+
+        meter.value = percentualMeterCalculado ;
+
+
+       if (percentualMeterCalculado < 100 ){
+          context.strokeStyle = 'red';
+          context.lineWidth = 2;
+          mensagemCapturaFoto.innerHTML='Centralize e aproxime '
+          btnFotografar.disabled = true;
+       }  else{
+          context.strokeStyle = 'green';
+          context.lineWidth = 2;
+          mensagemCapturaFoto.innerHTML=''
+          btnFotografar.disabled = false;
+       } 
+
+       
           context.strokeRect(rect.x, rect.y, rect.width, rect.height);
           context.font = '11px Helvetica';
           context.fillStyle = "#fff";
           context.fillText('x: ' + rect.x + 'px', rect.x + rect.width + 5, rect.y + 11);
           context.fillText('y: ' + rect.y + 'px', rect.x + rect.width + 5, rect.y + 22);
 
-  
-
-
-        const percentualFace =  round( (rect.width * rect.height) / (canvas.width*canvas.height) ,2)  *100 ;
-
-        let valPercentualMinimo  = percentualMinimo.value
-
-          console.log("percentualFace",percentualFace);
-          /*
-         if (percentualFace>= valPercentualMinimo) {
-            meter.value = 100 ;
-         }else{
-          meter.value = 40 ;
-         }
-*/
-        
-
-        facePercentual.innerHTML=  percentualFace.toLocaleString("pt-BR", { maximumFractionDigits: 2, minimumFractionDigits: 2 })  +  ' %'
-
-
-
-
-
-        });
-      });
-
-      
-
-
-    };
+   }
 
 
   document.querySelector('#btnFotografarFace')	
@@ -205,21 +248,7 @@ function round(value, decimals) {
 
 }
 
-/*
-    takepicture() {
-      this.isFoto = true;
-      this.isVideo = false;
-      var context = this.canvas.getContext("2d");
-      if (this.width && this.height) {
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
-        context.drawImage(this.video, 0, 0, this.width, this.height);
 
-        this.data = this.canvas.toDataURL("image/jpg");
-        this.photo.setAttribute("src", this.data);
-      }
-    },    
-    */
   </script>
 
 </body>

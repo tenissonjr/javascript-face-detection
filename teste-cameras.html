@@ -3,70 +3,178 @@
 <head>
   <meta charset="utf-8">
   <title>Teste de Câmeras</title>
-  <style>
 
 
- 
-  </style>
+  <link rel="stylesheet"
+	href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+	integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk"
+    crossorigin="anonymous">
+    
+    <style>
+        h2 {
+        color: blue;
+        }
+    </style>
+
 </head>
 <body>
 
+<div class="container">
+    <div class="row">
+        <div class="col-md-12"><h1>Teste de seleção de câmeras:</h1>
+        </div>
+    </div>   
+
+    <div class="row">
+        <div class="col-md-6" ><h2> Câmera Visitante</h2> </div>
+        <div class="col-md-6" > <h2>Câmera Documento</h2> </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <video id="camera-visitante" width="450" height="600" preload autoplay loop muted></video>
+        </div>
+        <div class="col-md-6">
+            <video id="camera-documento" width="450" height="600" preload autoplay loop muted></video>
+        </div>
+    </div>   
+
+    <div class="row">
+        <div class="col-md-6">
+            <select id="listaCamerasVisitante">
+                <option></option>
+            </select>
+            &nbsp;<button id="btnSelecionarCameraVisitante" class="btn btn-primary">Selecionar</button>
+        </div>
+        <div class="col-md-6">
+            <select id="listaCamerasDocumento">
+                <option></option>
+            </select>
+            &nbsp;<button id="btnSelecionarCameraDocumento"class="btn btn-primary" >Selecionar</button>
+        </div>
+    </div>   
 
 
-<center>
-        <video id="camera-visitante" width="300" height="400" preload autoplay loop muted></video>
-        <Br>
-        <video id="camera-documento" width="300" height="400" preload autoplay loop muted></video> 
+</div>        
 
 
-</center>
 
   <script>
 
-  function round(value, decimals) {
-    return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
-  }
 
-  const cameraVisitante = document.querySelector('#camera-visitante')
-
-  const cameraDocumento = document.querySelector('#camera-documento')
-
-  const startVideo = () => {
-    navigator.mediaDevices.enumerateDevices()
-    .then(devices => {
-        if (Array.isArray(devices)) {
-            devices.forEach(device => {
-                
-                if (device.kind === 'videoinput') {
-                    console.log(device)
-                    if (device.label.includes('LG Webcam (04f2:b149)')) {
-                        navigator.getUserMedia(
-                            { video: {
-                                deviceId: device.deviceId
-                            }},
-                            stream => cameraVisitante.srcObject = stream,
-                            error => console.error(error)
-                        )
-                    }
-
-                    if (device.label.includes('C920')) {
-                        navigator.getUserMedia(
-                            { video: {
-                                deviceId: device.deviceId
-                            }},
-                            stream => cameraDocumento.srcObject = stream,
-                            error => console.error(error)
-                        )
-                    }
+const videoVisitante                = document.getElementById('camera-visitante');
+const btnSelecionarCameraVisitante  = document.getElementById('btnSelecionarCameraVisitante');
+const listaCamerasVisitante         = document.getElementById('listaCamerasVisitante');
+let currentStreamCameraVisitante;
 
 
+const videoDocumento                = document.getElementById('camera-documento');
+const btnSelecionarCameraDocumento  = document.getElementById('btnSelecionarCameraDocumento');
+const listaCamerasDocumento         = document.getElementById('listaCamerasDocumento');
+let currentStreamCameraDocumento;
 
-                }
-            })
-        }
-    })
+function stopMediaTracks(stream) {
+  stream.getTracks().forEach(track => {
+    track.stop();
+  });
 }
-startVideo();
+
+function atualizarListaCamerasDisponiveisVisitante(mediaDevices){
+  listaCamerasVisitante.innerHTML = '';
+  listaCamerasVisitante.appendChild(document.createElement('option'));
+  let count = 1;
+  mediaDevices.forEach(mediaDevice => {
+    if (mediaDevice.kind === 'videoinput') {
+      const option = document.createElement('option');
+      option.value = mediaDevice.deviceId;
+      const label = mediaDevice.label || `Camera ${count++}`;
+      const textNode = document.createTextNode(label);
+      option.appendChild(textNode);
+      listaCamerasVisitante.appendChild(option);
+    }
+  });
+}
+
+function atualizarListaCamerasDisponiveisDocumento(mediaDevices){
+  listaCamerasDocumento.innerHTML = '';
+  listaCamerasDocumento.appendChild(document.createElement('option'));
+  let count = 1;
+  mediaDevices.forEach(mediaDevice => {
+    if (mediaDevice.kind === 'videoinput') {
+      const option = document.createElement('option');
+      option.value = mediaDevice.deviceId;
+      const label = mediaDevice.label || `Camera ${count++}`;
+      const textNode = document.createTextNode(label);
+      option.appendChild(textNode);
+      listaCamerasDocumento.appendChild(option);
+    }
+  });
+}
+
+
+function atualizarListaCamerasDisponiveis(mediaDevices) {
+    atualizarListaCamerasDisponiveisVisitante(mediaDevices);
+    atualizarListaCamerasDisponiveisDocumento(mediaDevices);
+}
+
+btnSelecionarCameraVisitante.addEventListener('click', event => {
+    if (typeof currentStreamCameraVisitante !== 'undefined') {
+    stopMediaTracks(currentStreamCameraVisitante);
+  }
+  const videoConstraints = {};
+  if (listaCamerasVisitante.value === '') {
+    videoConstraints.facingMode = 'environment';
+  } else {
+    videoConstraints.deviceId = { exact: listaCamerasVisitante.value };
+  }
+  const constraints = {
+    video: videoConstraints,
+    audio: false
+  };
+  navigator.mediaDevices
+    .getUserMedia(constraints)
+    .then(stream => {
+        currentStreamCameraVisitante = stream;
+        videoVisitante.srcObject = stream;
+      return navigator.mediaDevices.enumerateDevices();
+    })
+    .then(atualizarListaCamerasDisponiveis)
+    .catch(error => {
+      console.error(error);
+    });
+});
+
+
+btnSelecionarCameraDocumento.addEventListener('click', event => {
+    if (typeof currentStreamCameraDocumento !== 'undefined') {
+    stopMediaTracks(currentStreamCameraDocumento);
+  }
+  const videoConstraints = {};
+  if (listaCamerasDocumento.value === '') {
+    videoConstraints.facingMode = 'environment';
+  } else {
+    videoConstraints.deviceId = { exact: listaCamerasDocumento.value };
+  }
+  const constraints = {
+    video: videoConstraints,
+    audio: false
+  };
+  navigator.mediaDevices
+    .getUserMedia(constraints)
+    .then(stream => {
+        currentStreamCameraDocumento = stream;
+    videoDocumento.srcObject = stream;
+      return navigator.mediaDevices.enumerateDevices();
+    })
+    .then(atualizarListaCamerasDisponiveis)
+    .catch(error => {
+      console.error(error);
+    });
+});
+
+
+navigator.mediaDevices.enumerateDevices().then(atualizarListaCamerasDisponiveis);
+
+
   </script>
 
 </body>
