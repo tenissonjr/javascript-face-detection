@@ -119,9 +119,6 @@ function selecionarCameraDocumento(){
 
 }
 
-
-
-
     btnSelecionarCameraVisitante.addEventListener('click', selecionarCameraVisitante);
     btnAtualizarListaCamerasVisitante.addEventListener('click', atualizarListaCamerasDisponiveisVisitante);
     

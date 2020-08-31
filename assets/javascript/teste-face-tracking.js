@@ -24,9 +24,6 @@
     }
 
 
-
-    
-    
     
     function IdentificarRosto() {
 
@@ -37,23 +34,21 @@
 
       tracking.track('#video', tracker, { camera: true });
 
-      tracker.on('track', function(event) {
-      context.clearRect(0, 0, canvas.width, canvas.height);
+      tracker.on('track', (event) => {
 
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    if (parseFloat( percentualMinimo.value )==0){
+                      return ;
+                    }
+                    event.data.forEach( rect => destacarRostoIdentificado(rect));      
 
-      if (parseFloat( percentualMinimo.value )==0){
-        return ;
-      }
-
-      event.data.forEach( rect => destacarRostoIdentificado(rect));      
-
-        if (event.data.length == 0){        
-          mensagemCapturaFoto.innerHTML='Falha de captura. Nenhum rosto identificado.'
-          btnFotografar.disabled = true;
-        } else if (event.data.length > 1){
-          mensagemCapturaFoto.innerHTML='Falha de captura. Mais de um rosto identificado.'
-          btnFotografar.disabled = true;
-        }
+                    if (event.data.length == 0){        
+                      mensagemCapturaFoto.innerHTML='Falha de captura. Nenhum rosto identificado.'
+                      btnFotografar.disabled = true;
+                    } else if (event.data.length > 1){
+                      mensagemCapturaFoto.innerHTML='Falha de captura. Mais de um rosto identificado.'
+                      btnFotografar.disabled = true;
+                    }
       });
 
 
@@ -122,13 +117,8 @@
         foto.height = canvas.height;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        //this.data = this.canvas.toDataURL("image/jpg");
-        //this.photo.setAttribute("src", this.data);
-
         foto.style.visibility="";
       }
-
-
 
 
   }
