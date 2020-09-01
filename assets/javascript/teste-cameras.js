@@ -68,12 +68,17 @@ function selecionarCameraVisitante(){
     if (listaCamerasVisitante.value === '') {
       videoConstraints.facingMode = 'environment';
     } else {
+
       videoConstraints.deviceId = { exact: listaCamerasVisitante.value };
+      videoConstraints.width    = { min: 225, max: 225};
+      videoConstraints.height   = { min: 300, max: 300};
     }
+
     const constraints = {
       video: videoConstraints,
       audio: false
     };
+
     navigator.mediaDevices
       .getUserMedia(constraints)
       .then(stream => {
