@@ -1,0 +1,108 @@
+<html>
+<head>
+
+    <link rel="stylesheet"
+	href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+	integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk"
+	crossorigin="anonymous">
+
+
+</head>
+<body>
+    
+    <div class="container">
+
+        <div class="row">
+          <div class="col-md-12">
+            <h2>Teste de de leitura de QRCode:</h2>
+          </div>
+        </div>    
+  
+          <div class="row">
+            <div class="col-md-2">
+                QR Code :
+             </div>
+            <div class="col-md-10"><textarea  id="qrcode" rows="3" cols="150">`^numeroCPF^Ç^04513195835^,îdConvidado^Ç49,îdAgendamento^Ç52,êmail^Ç^tenisson.junior@camara.leg.br^{</textarea><br> </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-2">
+                Conversão :
+             </div>
+            <div class="col-md-10"><textarea  id="output" rows="3" cols="150"></textarea><br> </div></div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-2">
+                &nbsp;
+             </div>
+            <div class="col-md-10">
+                   <input  id="btnPesquisar" type="submit"  class="btn btn-primary" value="Pesquisar">
+                   &nbsp;<input id="btnLimpar" type="reset"  class="btn btn-primary" value="Limpar">
+            </div>
+        </div>   
+
+</body>    
+<script >
+
+const qrcode        = document.getElementById('qrcode')
+const output        = document.getElementById('output')
+const btnPesquisar  = document.getElementById('btnPesquisar')
+const btnLimpar     = document.getElementById('btnLimpar')
+
+btnPesquisar.addEventListener("click", (event) =>{
+    console.log(qrcode.value)
+        output.value = converterJsonCaracterInglesParaPortugues(qrcode.value)
+ });
+
+
+ 
+ function isValidJson(str) {
+    try {
+        
+        if(typeof str != 'string') return false;
+        JSON.parse(str);
+        return true
+    } catch (error) {
+        return false
+    }
+}
+function converterJsonCaracterInglesParaPortugues(jsonString){
+
+
+    if (isValidJson(jsonString)) {
+        return jsonString;
+    }
+
+    let novoJson = jsonString
+                    .replaceAll('{','}')
+                    .replaceAll('`','{')
+                    .replaceAll('^Ç^','":"')
+                    .replaceAll('ê','"e')                    
+                    .replaceAll('î','"i')                    
+                    .replaceAll('Ç',':')
+                    .replaceAll('^','"')
+
+
+
+    console.log("novoJson",novoJson)
+
+    return novoJson ;
+
+
+
+
+
+
+}
+
+
+btnLimpar.addEventListener("click", (event) =>{
+    qrcode.value=''
+    output.value=''
+});
+
+
+</script>
+
+</html>
