@@ -20,7 +20,10 @@ class Camera{
         if (mediaDevice.kind === 'videoinput' && mediaDevice.label!='Logi Capture') {
           let option = document.createElement('option');
           option.value = mediaDevice.deviceId;
-          let label = mediaDevice.label || `Câmera ${count++}`;
+          let label = `Câmera ${count++}` ;
+          if (mediaDevice.label){
+            label += ' - ' + mediaDevice.label;
+          }  
           let textNode = document.createTextNode(label);
           option.appendChild(textNode);
           this.listaCamerasDisponiveis.appendChild(option);
